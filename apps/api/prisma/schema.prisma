@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String     @id @default(uuid())
+  keycloakId  String     @unique
+  username    String
+  email       String     @unique
+  department  String?
+  role        Role       @default(USER)
+  documents   Document[]
+  auditLogs   AuditLog[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+enum Role {
+  USER
+  MANAGER
+  ADMIN
+}
+
+model Document {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  fileName    String
+  storagePath String
+  status      DocStatus @default(UPLOADED)
+  ocrMethod   String?
+  ocrText     String?
+  translated  String?
+  language    String?
+  pageCount   Int?
+  jobs        Job[]
+  exports     Export[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum DocStatus {
+  UPLOADED
+  OCR_PENDING
+  OCR_DONE
+  TRANSLATE_PENDING
+  TRANSLATE_DONE
+  EXPORT_READY
+  ERROR
+}
+
+model Job {
+  id         String    @id @default(uuid())
+  documentId String
+  document   Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  type       JobType
+  status     JobStatus @default(QUEUED)
+  progress   Int       @default(0)
+  error      String?
+  bullJobId  String?
+  createdAt  DateTime  @default(now())
+  finishedAt DateTime?
+}
+
+enum JobType {
+  OCR
+  TRANSLATE
+  EXPORT
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  DONE
+  FAILED
+}
+
+model Export {
+  id          String   @id @default(uuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  format      String
+  storagePath String
+  sizeBytes   Int?
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  meta      Json?
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+}
+
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
