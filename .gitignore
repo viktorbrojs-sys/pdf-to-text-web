@@ -7,3 +7,10 @@ dist/
 logs/
 data/uploads/
 data/output/
+data/uploads/*
+!data/uploads/.gitkeep
+data/output/*
+!data/output/.gitkeep
+infra/nginx/certs/*.pem
+infra/nginx/certs/*.key
+!infra/nginx/certs/.gitkeep
