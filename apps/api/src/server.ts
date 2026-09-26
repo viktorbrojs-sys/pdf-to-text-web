@@ -10,8 +10,12 @@ import queuePlugin from './plugins/queue.js';
 import minioPlugin from './plugins/minio.js';
 import authPlugin  from './plugins/auth.js';
 
-import healthRoutes from './routes/health.js';
-import authRoutes   from './routes/auth.js';
+import healthRoutes    from './routes/health.js';
+import authRoutes      from './routes/auth.js';
+import documentRoutes  from './routes/documents.js';
+import jobRoutes       from './routes/jobs.js';
+import exportRoutes    from './routes/export.js';
+import adminRoutes     from './routes/admin.js';
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -49,7 +53,10 @@ async function start() {
   // ── Routes ──
   await fastify.register(healthRoutes);
   await fastify.register(authRoutes);
-  // Следующие этапы: documents, jobs, export, admin
+  await fastify.register(documentRoutes);
+  await fastify.register(jobRoutes);
+  await fastify.register(exportRoutes);
+  await fastify.register(adminRoutes);
 
   const host = process.env.HOST ?? '0.0.0.0';
   const port = Number(process.env.PORT ?? 3001);
