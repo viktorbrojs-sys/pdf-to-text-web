@@ -1,0 +1,36 @@
+version: '3.9'
+
+# Используй: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+services:
+
+  nginx:
+    ports:
+      - "80:80"
+    volumes:
+      - ./infra/nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+
+  api:
+    build:
+      target: deps           # останавливаемся на стадии deps, не собираем prod
+    command: ["npx", "tsx", "watch", "src/server.ts"]
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./apps/api/src:/app/src:ro
+    ports:
+      - "127.0.0.1:3001:3001"
+
+  worker:
+    command: ["npx", "tsx", "watch", "src/workers/index.ts"]
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./apps/api/src:/app/src:ro
+    deploy:
+      replicas: 1
+
+  web:
+    build: {}
+    image: ""
+    # В dev режиме web запускается отдельно: cd apps/web && npm run dev
+    profiles: ["skip"]

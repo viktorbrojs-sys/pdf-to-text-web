@@ -1,0 +1,120 @@
+{
+  "realm": "pdf-to-text",
+  "enabled": true,
+  "displayName": "PDF to Text",
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "accessTokenLifespan": 28800,
+  "roles": {
+    "realm": [
+      { "name": "USER",    "description": "Базовый пользователь — OCR, перевод, экспорт своих файлов" },
+      { "name": "MANAGER", "description": "Менеджер — видит документы своего отдела" },
+      { "name": "ADMIN",   "description": "Администратор — полный доступ + настройки" }
+    ]
+  },
+  "defaultRoles": ["USER"],
+  "clients": [
+    {
+      "clientId": "pdf-to-text-api",
+      "name": "PDF to Text API",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "REPLACE_WITH_KEYCLOAK_CLIENT_SECRET",
+      "redirectUris": ["${APP_URL}/auth/callback", "http://localhost/auth/callback"],
+      "webOrigins": ["${APP_URL}", "http://localhost"],
+      "standardFlowEnabled": true,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "department",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "department",
+            "claim.name": "department",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "userFederationProviders": [
+    {
+      "displayName": "ActiveDirectory",
+      "providerName": "ldap",
+      "config": {
+        "enabled": ["false"],
+        "vendor": ["ad"],
+        "connectionUrl": ["ldap://your-ad-server:389"],
+        "bindDn": ["CN=svc-keycloak,OU=ServiceAccounts,DC=company,DC=local"],
+        "bindCredential": ["REPLACE_WITH_AD_PASSWORD"],
+        "usersDn": ["OU=Users,DC=company,DC=local"],
+        "usernameLDAPAttribute": ["sAMAccountName"],
+        "rdnLDAPAttribute": ["cn"],
+        "uuidLDAPAttribute": ["objectGUID"],
+        "userObjectClasses": ["person, organizationalPerson, user"],
+        "searchScope": ["2"],
+        "useTruststoreSpi": ["ldapsOnly"],
+        "connectionPooling": ["true"],
+        "pagination": ["true"],
+        "syncRegistrations": ["false"],
+        "importEnabled": ["true"],
+        "fullSyncPeriod": ["604800"],
+        "changedSyncPeriod": ["86400"],
+        "editMode": ["READ_ONLY"]
+      },
+      "mappers": [
+        {
+          "name": "username",
+          "federationMapperType": "user-attribute-ldap-mapper",
+          "config": {
+            "ldap.attribute": "sAMAccountName",
+            "user.model.attribute": "username",
+            "always.read.value.from.ldap": "false",
+            "is.mandatory.in.ldap": "true",
+            "read.only": "true"
+          }
+        },
+        {
+          "name": "email",
+          "federationMapperType": "user-attribute-ldap-mapper",
+          "config": {
+            "ldap.attribute": "mail",
+            "user.model.attribute": "email",
+            "always.read.value.from.ldap": "false",
+            "is.mandatory.in.ldap": "false",
+            "read.only": "true"
+          }
+        },
+        {
+          "name": "department",
+          "federationMapperType": "user-attribute-ldap-mapper",
+          "config": {
+            "ldap.attribute": "department",
+            "user.model.attribute": "department",
+            "always.read.value.from.ldap": "true",
+            "is.mandatory.in.ldap": "false",
+            "read.only": "true"
+          }
+        }
+      ]
+    }
+  ]
+}
